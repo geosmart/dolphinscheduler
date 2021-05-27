@@ -18,9 +18,10 @@
 package org.apache.dolphinscheduler.server.entity;
 
 import org.apache.dolphinscheduler.common.enums.ExecutionStatus;
+import org.apache.dolphinscheduler.common.enums.TaskTimeoutStrategy;
+import org.apache.dolphinscheduler.common.utils.JSONUtils;
 import org.apache.dolphinscheduler.remote.command.Command;
 import org.apache.dolphinscheduler.remote.command.TaskExecuteRequestCommand;
-import org.apache.dolphinscheduler.remote.utils.JsonSerializer;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -37,7 +38,6 @@ public class TaskExecutionContext implements Serializable {
      * task id
      */
     private int taskInstanceId;
-
 
     /**
      * task name
@@ -87,6 +87,16 @@ public class TaskExecutionContext implements Serializable {
     private int processId;
 
     /**
+     * processCode
+     */
+    private Long processDefineCode;
+
+    /**
+     * processVersion
+     */
+    private int processDefineVersion;
+
+    /**
      * appIds
      */
     private String appIds;
@@ -131,16 +141,10 @@ public class TaskExecutionContext implements Serializable {
      */
     private String queue;
 
-
     /**
-     * process define id
+     * project code
      */
-    private int processDefineId;
-
-    /**
-     * project id
-     */
-    private int projectId;
+    private long projectCode;
 
     /**
      * taskParams
@@ -165,7 +169,7 @@ public class TaskExecutionContext implements Serializable {
     /**
      * task timeout strategy
      */
-    private int taskTimeoutStrategy;
+    private TaskTimeoutStrategy taskTimeoutStrategy;
 
     /**
      * task timeout
@@ -297,6 +301,22 @@ public class TaskExecutionContext implements Serializable {
         this.processId = processId;
     }
 
+    public Long getProcessDefineCode() {
+        return processDefineCode;
+    }
+
+    public void setProcessDefineCode(Long processDefineCode) {
+        this.processDefineCode = processDefineCode;
+    }
+
+    public int getProcessDefineVersion() {
+        return processDefineVersion;
+    }
+
+    public void setProcessDefineVersion(int processDefineVersion) {
+        this.processDefineVersion = processDefineVersion;
+    }
+
     public String getAppIds() {
         return appIds;
     }
@@ -361,20 +381,12 @@ public class TaskExecutionContext implements Serializable {
         this.queue = queue;
     }
 
-    public int getProcessDefineId() {
-        return processDefineId;
+    public long getProjectCode() {
+        return projectCode;
     }
 
-    public void setProcessDefineId(int processDefineId) {
-        this.processDefineId = processDefineId;
-    }
-
-    public int getProjectId() {
-        return projectId;
-    }
-
-    public void setProjectId(int projectId) {
-        this.projectId = projectId;
+    public void setProjectCode(long projectCode) {
+        this.projectCode = projectCode;
     }
 
     public String getTaskParams() {
@@ -409,11 +421,11 @@ public class TaskExecutionContext implements Serializable {
         this.taskAppId = taskAppId;
     }
 
-    public int getTaskTimeoutStrategy() {
+    public TaskTimeoutStrategy getTaskTimeoutStrategy() {
         return taskTimeoutStrategy;
     }
 
-    public void setTaskTimeoutStrategy(int taskTimeoutStrategy) {
+    public void setTaskTimeoutStrategy(TaskTimeoutStrategy taskTimeoutStrategy) {
         this.taskTimeoutStrategy = taskTimeoutStrategy;
     }
 
@@ -475,7 +487,7 @@ public class TaskExecutionContext implements Serializable {
 
     public Command toCommand() {
         TaskExecuteRequestCommand requestCommand = new TaskExecuteRequestCommand();
-        requestCommand.setTaskExecutionContext(JsonSerializer.serializeToString(this));
+        requestCommand.setTaskExecutionContext(JSONUtils.toJsonString(this));
         return requestCommand.convert2Command();
     }
 
@@ -517,6 +529,8 @@ public class TaskExecutionContext implements Serializable {
                 + ", logPath='" + logPath + '\''
                 + ", taskJson='" + taskJson + '\''
                 + ", processId=" + processId
+                + ", processDefineCode=" + processDefineCode
+                + ", processDefineVersion=" + processDefineVersion
                 + ", appIds='" + appIds + '\''
                 + ", processInstanceId=" + processInstanceId
                 + ", scheduleTime=" + scheduleTime
@@ -525,8 +539,7 @@ public class TaskExecutionContext implements Serializable {
                 + ", cmdTypeIfComplement=" + cmdTypeIfComplement
                 + ", tenantCode='" + tenantCode + '\''
                 + ", queue='" + queue + '\''
-                + ", processDefineId=" + processDefineId
-                + ", projectId=" + projectId
+                + ", projectCode=" + projectCode
                 + ", taskParams='" + taskParams + '\''
                 + ", envFile='" + envFile + '\''
                 + ", definedParams=" + definedParams

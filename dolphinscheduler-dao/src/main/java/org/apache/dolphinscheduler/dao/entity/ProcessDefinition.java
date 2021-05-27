@@ -49,6 +49,11 @@ public class ProcessDefinition {
     private int id;
 
     /**
+     * code
+     */
+    private Long code;
+
+    /**
      * name
      */
     private String name;
@@ -56,7 +61,7 @@ public class ProcessDefinition {
     /**
      * version
      */
-    private long version;
+    private int version;
 
     /**
      * release state : online/offline
@@ -65,12 +70,21 @@ public class ProcessDefinition {
 
     /**
      * project id
+     * TODO: delete
      */
+    @TableField(exist = false)
     private int projectId;
 
     /**
-     * definition json string
+     * project code
      */
+    private Long projectCode;
+
+    /**
+     * definition json string
+     * TODO: delete
+     */
+    @TableField(exist = false)
     private String processDefinitionJson;
 
     /**
@@ -136,18 +150,9 @@ public class ProcessDefinition {
 
     /**
      * connects array for web
+     * TODO: delete
      */
     private String connects;
-
-    /**
-     * receivers
-     */
-    private String receivers;
-
-    /**
-     * receivers cc
-     */
-    private String receiversCc;
 
     /**
      * schedule release state : online/offline
@@ -168,13 +173,22 @@ public class ProcessDefinition {
     /**
      * modify user name
      */
+    @TableField(exist = false)
     private String modifyBy;
 
     /**
      * resource ids
      */
+    @TableField(exist = false)
     private String resourceIds;
 
+    /**
+     * warningGroupId
+     */
+    @TableField(exist = false)
+    private int warningGroupId;
+
+    public ProcessDefinition(){}
 
     public String getName() {
         return name;
@@ -184,11 +198,11 @@ public class ProcessDefinition {
         this.name = name;
     }
 
-    public long getVersion() {
+    public int getVersion() {
         return version;
     }
 
-    public void setVersion(long version) {
+    public void setVersion(int version) {
         this.version = version;
     }
 
@@ -272,7 +286,6 @@ public class ProcessDefinition {
         this.projectName = projectName;
     }
 
-
     public String getGlobalParams() {
         return globalParams;
     }
@@ -324,22 +337,6 @@ public class ProcessDefinition {
         this.connects = connects;
     }
 
-    public String getReceivers() {
-        return receivers;
-    }
-
-    public void setReceivers(String receivers) {
-        this.receivers = receivers;
-    }
-
-    public String getReceiversCc() {
-        return receiversCc;
-    }
-
-    public void setReceiversCc(String receiversCc) {
-        this.receiversCc = receiversCc;
-    }
-
     public ReleaseState getScheduleReleaseState() {
         return scheduleReleaseState;
     }
@@ -388,35 +385,59 @@ public class ProcessDefinition {
         this.modifyBy = modifyBy;
     }
 
-    @Override
-    public String toString() {
-        return "ProcessDefinition{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", version=" + version +
-                ", releaseState=" + releaseState +
-                ", projectId=" + projectId +
-                ", processDefinitionJson='" + processDefinitionJson + '\'' +
-                ", description='" + description + '\'' +
-                ", globalParams='" + globalParams + '\'' +
-                ", globalParamList=" + globalParamList +
-                ", globalParamMap=" + globalParamMap +
-                ", createTime=" + createTime +
-                ", updateTime=" + updateTime +
-                ", flag=" + flag +
-                ", userId=" + userId +
-                ", userName='" + userName + '\'' +
-                ", projectName='" + projectName + '\'' +
-                ", locations='" + locations + '\'' +
-                ", connects='" + connects + '\'' +
-                ", receivers='" + receivers + '\'' +
-                ", receiversCc='" + receiversCc + '\'' +
-                ", scheduleReleaseState=" + scheduleReleaseState +
-                ", timeout=" + timeout +
-                ", tenantId=" + tenantId +
-                ", modifyBy='" + modifyBy + '\'' +
-                ", resourceIds='" + resourceIds + '\'' +
-                '}';
+    public Long getCode() {
+        return code;
     }
 
+    public void setCode(Long code) {
+        this.code = code;
+    }
+
+    public Long getProjectCode() {
+        return projectCode;
+    }
+
+    public void setProjectCode(Long projectCode) {
+        this.projectCode = projectCode;
+    }
+
+    public int getWarningGroupId() {
+        return warningGroupId;
+    }
+
+    public void setWarningGroupId(int warningGroupId) {
+        this.warningGroupId = warningGroupId;
+    }
+
+    @Override
+    public String toString() {
+        return "ProcessDefinition{"
+            + "id=" + id
+            + ", name='" + name + '\''
+            + ", code=" + code
+            + ", version=" + version
+            + ", releaseState=" + releaseState
+            + ", projectId=" + projectId
+            + ", projectCode=" + projectCode
+            + ", processDefinitionJson='" + processDefinitionJson + '\''
+            + ", description='" + description + '\''
+            + ", globalParams='" + globalParams + '\''
+            + ", globalParamList=" + globalParamList
+            + ", globalParamMap=" + globalParamMap
+            + ", createTime=" + createTime
+            + ", updateTime=" + updateTime
+            + ", flag=" + flag
+            + ", userId=" + userId
+            + ", userName='" + userName + '\''
+            + ", projectName='" + projectName + '\''
+            + ", locations='" + locations + '\''
+            + ", connects='" + connects + '\''
+            + ", scheduleReleaseState=" + scheduleReleaseState
+            + ", timeout=" + timeout
+            + ", warningGroupId=" + warningGroupId
+            + ", tenantId=" + tenantId
+            + ", modifyBy='" + modifyBy + '\''
+            + ", resourceIds='" + resourceIds + '\''
+            + '}';
+    }
 }

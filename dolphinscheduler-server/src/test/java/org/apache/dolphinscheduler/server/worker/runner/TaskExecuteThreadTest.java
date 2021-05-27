@@ -18,11 +18,13 @@
 package org.apache.dolphinscheduler.server.worker.runner;
 
 import org.apache.dolphinscheduler.common.enums.ExecutionStatus;
+import org.apache.dolphinscheduler.common.enums.TaskType;
 import org.apache.dolphinscheduler.common.model.TaskNode;
 import org.apache.dolphinscheduler.common.task.AbstractParameters;
 import org.apache.dolphinscheduler.common.utils.CommonUtils;
 import org.apache.dolphinscheduler.common.utils.JSONUtils;
 import org.apache.dolphinscheduler.common.utils.LoggerUtils;
+import org.apache.dolphinscheduler.common.utils.OSUtils;
 import org.apache.dolphinscheduler.remote.command.Command;
 import org.apache.dolphinscheduler.remote.command.TaskExecuteAckCommand;
 import org.apache.dolphinscheduler.remote.command.TaskExecuteResponseCommand;
@@ -31,9 +33,12 @@ import org.apache.dolphinscheduler.server.worker.cache.impl.TaskExecutionContext
 import org.apache.dolphinscheduler.server.worker.processor.TaskCallbackService;
 import org.apache.dolphinscheduler.server.worker.task.AbstractTask;
 import org.apache.dolphinscheduler.server.worker.task.TaskManager;
+import org.apache.dolphinscheduler.service.alert.AlertClientService;
 import org.apache.dolphinscheduler.service.bean.SpringApplicationContext;
 
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -49,7 +54,7 @@ import org.slf4j.LoggerFactory;
  * test task execute thread.
  */
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({TaskManager.class, JSONUtils.class, CommonUtils.class, SpringApplicationContext.class})
+@PrepareForTest({TaskManager.class, JSONUtils.class, CommonUtils.class, SpringApplicationContext.class, OSUtils.class})
 public class TaskExecuteThreadTest {
 
     private TaskExecutionContext taskExecutionContext;
@@ -64,15 +69,18 @@ public class TaskExecuteThreadTest {
 
     private TaskExecutionContextCacheManagerImpl taskExecutionContextCacheManager;
 
+    private AlertClientService alertClientService;
+
     @Before
     public void before() {
         // init task execution context, logger
         taskExecutionContext = new TaskExecutionContext();
         taskExecutionContext.setProcessId(12345);
-        taskExecutionContext.setProcessDefineId(1);
         taskExecutionContext.setProcessInstanceId(1);
         taskExecutionContext.setTaskInstanceId(1);
-        taskExecutionContext.setTaskType("");
+        taskExecutionContext.setProcessDefineCode(1L);
+        taskExecutionContext.setProcessDefineVersion(1);
+        taskExecutionContext.setTaskType(TaskType.SHELL.getDesc());
         taskExecutionContext.setFirstSubmitTime(new Date());
         taskExecutionContext.setDelayTime(0);
         taskExecutionContext.setLogPath("/tmp/test.log");
@@ -84,7 +92,8 @@ public class TaskExecuteThreadTest {
 
         taskLogger = LoggerFactory.getLogger(LoggerUtils.buildTaskId(
                 LoggerUtils.TASK_LOGGER_INFO_PREFIX,
-                taskExecutionContext.getProcessDefineId(),
+                taskExecutionContext.getProcessDefineCode(),
+                taskExecutionContext.getProcessDefineVersion(),
                 taskExecutionContext.getProcessInstanceId(),
                 taskExecutionContext.getTaskInstanceId()
         ));
@@ -100,8 +109,10 @@ public class TaskExecuteThreadTest {
         PowerMockito.when(SpringApplicationContext.getBean(TaskExecutionContextCacheManagerImpl.class))
                 .thenReturn(taskExecutionContextCacheManager);
 
+        alertClientService = PowerMockito.mock(AlertClientService.class);
+
         PowerMockito.mockStatic(TaskManager.class);
-        PowerMockito.when(TaskManager.newTask(taskExecutionContext, taskLogger))
+        PowerMockito.when(TaskManager.newTask(taskExecutionContext, taskLogger, alertClientService))
                 .thenReturn(new SimpleTask(taskExecutionContext, taskLogger));
 
         PowerMockito.mockStatic(JSONUtils.class);
@@ -110,29 +121,38 @@ public class TaskExecuteThreadTest {
 
         PowerMockito.mockStatic(CommonUtils.class);
         PowerMockito.when(CommonUtils.getSystemEnvPath()).thenReturn("/user_home/.bash_profile");
+
+        List<String> osUserList = Collections.singletonList("test");
+        PowerMockito.mockStatic(OSUtils.class);
+        PowerMockito.when(OSUtils.getUserList()).thenReturn(osUserList);
     }
 
     @Test
     public void testNormalExecution() {
-        taskExecutionContext.setTaskType("SQL");
+        taskExecutionContext.setTaskType(TaskType.SQL.getDesc());
         taskExecutionContext.setStartTime(new Date());
         taskExecutionContext.setCurrentExecutionStatus(ExecutionStatus.RUNNING_EXECUTION);
-        TaskExecuteThread taskExecuteThread = new TaskExecuteThread(taskExecutionContext, taskCallbackService, taskLogger);
+        taskExecutionContext.setTenantCode("test");
+        TaskExecuteThread taskExecuteThread = new TaskExecuteThread(taskExecutionContext, taskCallbackService, taskLogger, alertClientService);
+        taskExecuteThread.run();
+        taskExecutionContext.getCurrentExecutionStatus();
+
         taskExecuteThread.run();
 
-        Assert.assertEquals(ExecutionStatus.SUCCESS, taskExecutionContext.getCurrentExecutionStatus());
+        Assert.assertEquals(ExecutionStatus.RUNNING_EXECUTION, taskExecutionContext.getCurrentExecutionStatus());
     }
 
     @Test
     public void testDelayExecution() {
-        taskExecutionContext.setTaskType("PYTHON");
+        taskExecutionContext.setTaskType(TaskType.PYTHON.getDesc());
         taskExecutionContext.setStartTime(null);
         taskExecutionContext.setDelayTime(1);
         taskExecutionContext.setCurrentExecutionStatus(ExecutionStatus.DELAY_EXECUTION);
-        TaskExecuteThread taskExecuteThread = new TaskExecuteThread(taskExecutionContext, taskCallbackService, taskLogger);
+        taskExecutionContext.setTenantCode("test");
+        TaskExecuteThread taskExecuteThread = new TaskExecuteThread(taskExecutionContext, taskCallbackService, taskLogger, alertClientService);
         taskExecuteThread.run();
 
-        Assert.assertEquals(ExecutionStatus.SUCCESS, taskExecutionContext.getCurrentExecutionStatus());
+        Assert.assertEquals(ExecutionStatus.RUNNING_EXECUTION, taskExecutionContext.getCurrentExecutionStatus());
     }
 
     private class SimpleTask extends AbstractTask {
