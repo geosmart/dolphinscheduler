@@ -26,9 +26,7 @@ import org.apache.dolphinscheduler.api.service.impl.UsersServiceImpl;
 import org.apache.dolphinscheduler.api.utils.PageInfo;
 import org.apache.dolphinscheduler.api.utils.Result;
 import org.apache.dolphinscheduler.common.Constants;
-import org.apache.dolphinscheduler.common.enums.ResourceType;
 import org.apache.dolphinscheduler.common.enums.UserType;
-import org.apache.dolphinscheduler.common.utils.CollectionUtils;
 import org.apache.dolphinscheduler.common.utils.EncryptionUtils;
 import org.apache.dolphinscheduler.dao.entity.AlertGroup;
 import org.apache.dolphinscheduler.dao.entity.Project;
@@ -45,6 +43,9 @@ import org.apache.dolphinscheduler.dao.mapper.ResourceUserMapper;
 import org.apache.dolphinscheduler.dao.mapper.TenantMapper;
 import org.apache.dolphinscheduler.dao.mapper.UDFUserMapper;
 import org.apache.dolphinscheduler.dao.mapper.UserMapper;
+import org.apache.dolphinscheduler.spi.enums.ResourceType;
+
+import org.apache.commons.collections.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -250,16 +251,16 @@ public class UsersServiceTest {
         when(userMapper.queryUserPaging(any(Page.class), eq("userTest"))).thenReturn(page);
 
         //no operate
-        Map<String, Object> result = usersService.queryUserList(user, "userTest", 1, 10);
+        Result result = usersService.queryUserList(user, "userTest", 1, 10);
         logger.info(result.toString());
-        Assert.assertEquals(Status.USER_NO_OPERATION_PERM, result.get(Constants.STATUS));
+        Assert.assertEquals(Status.USER_NO_OPERATION_PERM.getCode(), (int) result.getCode());
 
         //success
         user.setUserType(UserType.ADMIN_USER);
         result = usersService.queryUserList(user, "userTest", 1, 10);
-        Assert.assertEquals(Status.SUCCESS, result.get(Constants.STATUS));
-        PageInfo<User> pageInfo = (PageInfo<User>) result.get(Constants.DATA_LIST);
-        Assert.assertTrue(pageInfo.getLists().size() > 0);
+        Assert.assertEquals(Status.SUCCESS.getCode(), (int) result.getCode());
+        PageInfo<User> pageInfo = (PageInfo<User>) result.getData();
+        Assert.assertTrue(pageInfo.getTotalList().size() > 0);
     }
 
     @Test

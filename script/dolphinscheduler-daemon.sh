@@ -16,7 +16,7 @@
 # limitations under the License.
 #
 
-usage="Usage: dolphinscheduler-daemon.sh (start|stop|status) <api-server|master-server|worker-server|alert-server> "
+usage="Usage: dolphinscheduler-daemon.sh (start|stop|status) <api-server|master-server|worker-server|alert-server|standalone-server> "
 
 # if no args specified, show usage
 if [ $# -le 1 ]; then
@@ -36,6 +36,7 @@ BIN_DIR=`cd "$BIN_DIR"; pwd`
 DOLPHINSCHEDULER_HOME=`cd "$BIN_DIR/.."; pwd`
 
 source /etc/profile
+source "${DOLPHINSCHEDULER_HOME}/conf/env/dolphinscheduler_env.sh"
 
 export JAVA_HOME=$JAVA_HOME
 #export JAVA_HOME=/opt/soft/jdk
@@ -44,6 +45,7 @@ export HOSTNAME=`hostname`
 export DOLPHINSCHEDULER_PID_DIR=$DOLPHINSCHEDULER_HOME/pid
 export DOLPHINSCHEDULER_LOG_DIR=$DOLPHINSCHEDULER_HOME/logs
 export DOLPHINSCHEDULER_CONF_DIR=$DOLPHINSCHEDULER_HOME/conf
+export DOLPHINSCHEDULER_SQL_DIR=$DOLPHINSCHEDULER_HOME/sql
 export DOLPHINSCHEDULER_LIB_JARS=$DOLPHINSCHEDULER_HOME/lib/*
 
 export STOP_TIMEOUT=5
@@ -87,6 +89,8 @@ elif [ "$command" = "zookeeper-server" ]; then
   #note: this command just for getting a quick experience，not recommended for production. this operation will start a standalone zookeeper server
   LOG_FILE="-Dlogback.configurationFile=classpath:logback-zookeeper.xml"
   CLASS=org.apache.dolphinscheduler.service.zk.ZKServer
+elif [ "$command" = "standalone-server" ]; then
+  CLASS=org.apache.dolphinscheduler.server.StandaloneServer
 else
   echo "Error: No command named '$command' was found."
   exit 1
@@ -97,7 +101,7 @@ case $startStop in
     if [ "$DOCKER" = "true" ]; then
       echo start $command in docker
       export DOLPHINSCHEDULER_OPTS="$DOLPHINSCHEDULER_OPTS -XX:-UseContainerSupport"
-      exec_command="$LOG_FILE $DOLPHINSCHEDULER_OPTS -classpath $DOLPHINSCHEDULER_CONF_DIR:$DOLPHINSCHEDULER_LIB_JARS $CLASS"
+      exec_command="$LOG_FILE $DOLPHINSCHEDULER_OPTS -classpath $DOLPHINSCHEDULER_SQL_DIR:$DOLPHINSCHEDULER_CONF_DIR:$DOLPHINSCHEDULER_LIB_JARS $CLASS"
       $JAVA_HOME/bin/java $exec_command
     else
       [ -w "$DOLPHINSCHEDULER_PID_DIR" ] || mkdir -p "$DOLPHINSCHEDULER_PID_DIR"
@@ -110,7 +114,7 @@ case $startStop in
       fi
 
       echo starting $command, logging to $log
-      exec_command="$LOG_FILE $DOLPHINSCHEDULER_OPTS -classpath $DOLPHINSCHEDULER_CONF_DIR:$DOLPHINSCHEDULER_LIB_JARS $CLASS"
+      exec_command="$LOG_FILE $DOLPHINSCHEDULER_OPTS -classpath $DOLPHINSCHEDULER_SQL_DIR:$DOLPHINSCHEDULER_CONF_DIR:$DOLPHINSCHEDULER_LIB_JARS $CLASS"
       echo "nohup $JAVA_HOME/bin/java $exec_command > $log 2>&1 &"
       nohup $JAVA_HOME/bin/java $exec_command > $log 2>&1 &
       echo $! > $pid
